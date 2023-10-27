@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["files"])) {
     }
 
     // Prepare and execute the SQL query to insert file details into the database
-    $sql = "INSERT INTO files (file_name, file_type, file_path, unique_identifier) VALUES (?, ?, ?, ?)";
+    $sql = "INSERT INTO newyear2023 (file_name, file_type, file_path, unique_identifier) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
     // Generate a unique identifier for the file
@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["files"])) {
        echo 'alert("Uploaded file Successfully")';
        echo '</script>';
        echo '<script type="text/javascript">
-           window.location = "index.php"
+           window.location = "mall_opening_upload.html"
       </script>';
         
     } else {

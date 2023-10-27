@@ -1,98 +1,68 @@
-<?php include  '../php/components/header.php'; ?>
-
+<!DOCTYPE html>
 <html>
+<head>
+    <title>Image and Video Gallery</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+      body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.item {
+    width: 30%;
+    margin-bottom: 20px;
+}
+
+.item img,
+.item video {
+    width: 100%;
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pagination a {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 0 5px;
+    background-color: #f1f1f1;
+    color: #333;
+    text-decoration: none;
+}
+
+.pagination a.active {
+    background-color: #ccc;
+}
+
+    </style>
+</head>
 <body>
-<!--Navbar-->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <!-- Container wrapper -->
-        <div class="container-fluid">
-          <!-- Toggle button -->
-          <button
-            class="navbar-toggler"
-            type="button"
-            data-mdb-toggle="collapse"
-            data-mdb-target="#navbarCenteredExample"
-            aria-controls="navbarCenteredExample"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <i class="fas fa-bars"></i>
-          </button>
-      
-          <!-- Collapsible wrapper -->
-          <div
-            class="collapse navbar-collapse justify-content-center"
-            id="navbarCenteredExample"
-          >
-            <!-- Left links -->
-            <ul class="navbar-nav mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="#">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
-              </li>
-              <!-- Navbar dropdown -->
-              <li class="nav-item dropdown">
-                <a
-                  class="nav-link dropdown-toggle"
-                  href="#"
-                  id="navbarDropdown"
-                  role="button"
-                  data-mdb-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  Dropdown
-                </a>
-                <!-- Dropdown menu -->
-                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li>
-                    <a class="dropdown-item" href="../upload.html">Upload</a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="../php/gallery.php">Gallery</a>
-                  </li>
-                  <li><hr class="dropdown-divider" /></li>
-                  <li>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                  </li>
-                </ul>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link disabled"
-                  >Disabled</a
-                >
-              </li>
-            </ul>
-            <!-- Left links -->
-          </div>
-          <!-- Collapsible wrapper -->
-        </div>
-        <!-- Container wrapper -->
-      </nav>
-    <!--Navbar end-->
-
-    <!--Header-->
-    <div class="parallax-container">
-        <div class="parallax-image" style="background-image: url('../../assets/img/imaramall.webp');"></div>
-        <div class="parallax-content">
-            <div data-aos="fade-right" 
-                data-aos-duration="1000"
-                data-aos-easing="ease-in-sine">
-                <h1>Imaara through the years</h1>
-                <p>Scroll Down to see more</p>
-            </div>
-        </div>
-      </div>
-
-<?php
-// MySQL database configuration
+    <h1>Image and Video Gallery</h1>
+    <div class="gallery">
+    <?php
+// Include the database connection configuration file
 $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "events_db";
 
-// Create database connection
+// Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
@@ -100,68 +70,68 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Prepare and execute the SQL query to retrieve files from the database
-$sql = "SELECT file_name, file_type, file_path FROM files";
+// Number of items to display per page
+$items_per_page = 6;
+
+// Get the current page number from the URL parameter
+$current_page = isset($_GET['page']) ? $_GET['page'] : 1;
+
+// Calculate the offset for pagination
+$offset = ($current_page - 1) * $items_per_page;
+
+// Query to fetch data from the database with pagination
+$sql = "SELECT unique_id, file_path FROM files LIMIT $offset, $items_per_page";
 $result = $conn->query($sql);
 
+// Display the media files in the gallery
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $fileName = $row["file_name"];
-        $fileType = $row["file_type"];
-        $filePath = $row["file_path"];
-
-        // Display the file details and embed images or videos in the page
-        
-
-        if ($fileType === "image") {
-            echo "<div class = 'image-gallery'>
-            <div class = 'gallery-item'>
-            <img src='$filePath' alt='$fileName' >
-            </div>
-            ";
-        } elseif ($fileType === "video") {
-            echo "
-            <div class = 'gallery-item'>
-            <video controls width='400'><source src='$filePath' type='video/mp4'></video>
-            </div>
-            </div>";
+        $file_path = $row['file_path'];
+        $unique_id = $row['unique_id'];
+        echo "<div class='item'>";
+        if (is_image($file_path)) {
+            echo "<img src='$file_path' alt='Image'>";
+        } elseif (is_video($file_path)) {
+            echo "<video controls><source src='$file_path' type='video/mp4'></video>";
         }
+        echo "</div>";
     }
-} else {
-    echo "No files found in the database.";
 }
 
+// Function to check if the file is an image
+function is_image($file_path)
+{
+    $image_extensions = array('jpg', 'jpeg', 'png', 'gif');
+    $ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    return in_array($ext, $image_extensions);
+}
 
+// Function to check if the file is a video
+function is_video($file_path)
+{
+    $video_extensions = array('mp4', 'avi', 'mov');
+    $ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    return in_array($ext, $video_extensions);
+}
 
 // Close the database connection
 $conn->close();
 ?>
 
-<?php include '../php/components/footer.php'; ?>
+<div class="pagination">
+    <?php
+    // Calculate total pages and generate pagination links
+    $sql_count = "SELECT COUNT(*) AS total FROM files";
+    $result_count = $conn->query($sql_count);
+    $row_count = $result_count->fetch_assoc();
+    $total_pages = ceil($row_count['total'] / $items_per_page);
 
+    for ($i = 1; $i <= $total_pages; $i++) {
+        echo "<a href='index.php?page=$i'>$i</a>";
+    }
+    ?>
+</div>
 
-<!--Js-->
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        AOS.init();
-      </script>
-
-    <!-- MDB -->
-    <script
-    type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.js"
-    ></script>
-
-    <!--Parallax-->
-    <script type="text/javascript" src="../assets/js/parallax.js"></script>
-
-    <!--Slider-->
-    <script type="text/javascript" src="../assets/js/slider.js"></script>
-
-    <!--Gallery-->
-    <script type="text/javascript" src="../assets/js/gallery.js"></script>
-
-    <!--Pagination-->
-    <script type="text/javascript" src="../assets/js/pagination.js"></script>
+    </div>
 </body>
 </html>
